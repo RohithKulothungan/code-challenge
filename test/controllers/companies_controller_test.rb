@@ -5,6 +5,7 @@ class CompaniesControllerTest < ApplicationSystemTestCase
 
   def setup
     @company = companies(:hometown_painting)
+    @company_address_details = ZipCodes.identify(@company.zip_code)
   end
 
   test "Index" do
@@ -21,7 +22,7 @@ class CompaniesControllerTest < ApplicationSystemTestCase
     assert_text @company.name
     assert_text @company.phone
     assert_text @company.email
-    assert_text "City, State"
+    assert_text @company_address_details[:city] + "," + @company_address_details[:state_code]
   end
 
   test "Update" do
@@ -58,4 +59,12 @@ class CompaniesControllerTest < ApplicationSystemTestCase
     assert_equal "28173", last_company.zip_code
   end
 
+  test "Delete" do
+    visit company_path(@company)
+    click_button "Delete Company"
+    click_button "OK"
+
+    assert_text "Deleted Company"
+    assert_text "Wolf Painting"
+  end
 end

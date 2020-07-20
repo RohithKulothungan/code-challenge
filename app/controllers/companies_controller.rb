@@ -1,5 +1,8 @@
 class CompaniesController < ApplicationController
   before_action :set_company, except: [:index, :create, :new]
+  before_action :validate_email, only: [:create, :update]
+
+  EMAIL_REGEX = /\A[\w+\-.]+@getmainstreet.com\z/i
 
   def index
     @companies = Company.all
@@ -10,6 +13,7 @@ class CompaniesController < ApplicationController
   end
 
   def show
+    @company_address_details  = ZipCodes.identify(@company.zip_code)
   end
 
   def create
@@ -30,7 +34,12 @@ class CompaniesController < ApplicationController
     else
       render :edit
     end
-  end  
+  end
+
+  def destroy
+    @company.destroy
+    redirect_to companies_path, notice: "Deleted Company"
+  end
 
   private
 
@@ -43,11 +52,23 @@ class CompaniesController < ApplicationController
       :phone,
       :email,
       :owner_id,
-    )
+      )
   end
 
   def set_company
     @company = Company.find(params[:id])
   end
-  
+
+  def validate_email
+    input_email = company_params[:email]
+    if input_email.present?
+      valid_email = EMAIL_REGEX.match?(input_email)
+      unless valid_email
+        @company = Company.new(company_params)
+        flash[:error] = "Email address with domain '@getmainstreet.com' are only allowed!"
+        render :new
+      end
+    end
+  end
+
 end
